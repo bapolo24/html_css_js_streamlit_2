@@ -10,231 +10,120 @@
 # el archivo pueda utilizarse directamente durante la clase.
 # ============================================================
 
-# Streamlit crea controles, organiza la pantalla y ejecuta los cálculos.
+# Streamlit recibe los datos y coordina los cálculos de la aplicación.
 import streamlit as st
-# components permite incluir una zona con HTML/CSS/JavaScript.
 import streamlit.components.v1 as components
-# dedent elimina sangría del HTML para que Streamlit lo renderice correctamente.
 from textwrap import dedent
 
-st.set_page_config(page_title="Oil & Gas Production Dashboard", page_icon="🛢️", layout="wide")
+st.set_page_config(page_title="Oil & Gas | Centro de control", page_icon="🛢️", layout="wide")
 
-# Color del fondo general.
-FONDO = "#12304A"
-# Color usado en las tarjetas.
-SUPERFICIE = "#1B476B"
-# Color neón usado para destacar información.
-ACENTO = "#20E6C7"
-# Color principal del texto.
-TEXTO = "#F7FBFF"
+# Paleta sobria de operación: azul petróleo, gris acero y verde señal.
+NAVY = "#0B1F33"
+STEEL = "#173A52"
+MINT = "#46D7B0"
+ICE = "#EAF3F5"
+MUTED = "#A9BFCA"
 
 st.markdown(dedent(f"""
 <style>
-/* ==========================================================
-   GUÍA RÁPIDA DE CSS
-   ==========================================================
-   selector        = indica qué elemento queremos modificar.
-   background      = cambia el fondo.
-   color           = cambia el color del texto.
-   border          = crea un borde.
-   border-radius   = redondea las esquinas.
-   overflow:hidden = recorta lo que sobresale de la tarjeta.
-   clip-path       = fuerza la forma curva del contorno.
-   padding         = espacio DENTRO del elemento.
-   margin          = espacio FUERA del elemento.
-   box-shadow      = crea una sombra o brillo.
-   transition      = hace suave un cambio visual.
-   transform       = mueve, gira o escala un elemento.
-   :hover          = estilo usado cuando el cursor está encima.
-   ========================================================== */
-
-.stApp{{background:{FONDO};color:{TEXTO};}}
-h1,h2,h3,p,label,small{{color:{TEXTO} !important;}}
-.hero{{
-    border:2px solid rgba(32,230,199,.58);
-    border-radius:32px !important; overflow:hidden !important; clip-path: inset(0 round 32px);
-    padding:28px; background:{SUPERFICIE}; box-shadow:0 18px 42px rgba(4,18,29,.22); margin-bottom:22px;
-}}
-.accent{{color:{ACENTO};font-weight:800;}}
-.oil-card{{
-    position:relative; border:2px solid rgba(32,230,199,.58);
-    border-radius:32px !important; overflow:hidden !important; clip-path: inset(0 round 32px);
-    padding:26px; background:{SUPERFICIE}; box-shadow:0 16px 38px rgba(4,18,29,.24);
-    transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
-}}
-.oil-card::before{{
-    content:""; position:absolute; inset:0; border-radius:32px;
-    background:linear-gradient(135deg, rgba(32,230,199,.05), rgba(255,255,255,.01));
-    pointer-events:none;
-}}
-.oil-card:hover{{transform:translateY(-4px); border-color:{ACENTO}; box-shadow:0 20px 48px rgba(32,230,199,.18);}}
-.value{{color:{ACENTO};font-size:1.22rem;font-weight:800;}}
-div.stButton > button{{
-    width:100%; background:#20557E; color:{ACENTO}; border:2px solid {ACENTO};
-    border-radius:18px !important; padding:.82rem 1rem; font-weight:800;
-    transition:transform .2s ease, box-shadow .2s ease;
-}}
-div.stButton > button:hover{{transform:translateY(-2px); box-shadow:0 0 28px rgba(32,230,199,.34); color:{TEXTO};}}
-div[data-testid="stMetric"]{{
-    border:2px solid rgba(32,230,199,.42); border-radius:24px !important;
-    overflow:hidden !important; clip-path: inset(0 round 24px); background:{SUPERFICIE}; padding:16px;
-}}
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+:root {{ --navy: {NAVY}; --steel: {STEEL}; --mint: {MINT}; --ice: {ICE}; --muted: {MUTED}; --line: rgba(234,243,245,.14); }}
+.stApp {{ background: #071522; color: var(--ice); font-family: 'DM Sans', sans-serif; }}
+[data-testid="stHeader"] {{ background: rgba(7,21,34,.82); }}
+.block-container {{ max-width: 1260px; padding: 3.5rem 2.5rem 4rem; }}
+h1, h2, h3 {{ font-family: 'Barlow Condensed', sans-serif !important; letter-spacing: .02em; }}
+h1 {{ font-size: clamp(2.8rem, 6vw, 5.2rem) !important; line-height: .94 !important; }}
+h2, h3, p, label, [data-testid="stMetricLabel"] {{ color: var(--ice) !important; }}
+.eyebrow {{ color: var(--mint); font-size: .72rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }}
+.hero {{ border-left: 4px solid var(--mint); padding: 1.8rem 2rem; margin-bottom: 2.1rem; background: linear-gradient(100deg, rgba(23,58,82,.96), rgba(11,31,51,.64)); box-shadow: 0 18px 48px rgba(0,0,0,.2); }}
+.hero p {{ color: var(--muted) !important; max-width: 650px; font-size: 1.02rem; }}
+.section-label {{ color: var(--mint); font: 600 1rem 'Barlow Condensed', sans-serif; letter-spacing: .08em; text-transform: uppercase; border-bottom: 1px solid var(--line); padding-bottom: .7rem; margin: 0 0 1.1rem; }}
+.panel, .result-card {{ background: rgba(23,58,82,.64); border: 1px solid var(--line); padding: 1.5rem; transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease; }}
+.panel:hover, .result-card:hover {{ transform: translateY(-4px); border-color: rgba(70,215,176,.7); box-shadow: 0 16px 35px rgba(0,0,0,.2); }}
+.panel {{ min-height: 350px; }}
+.result-card {{ margin-top: 1.3rem; border-top: 3px solid var(--mint); }}
+.result-card strong {{ color: var(--mint); }}
+div[data-testid="stNumberInput"] input {{ background: rgba(7,21,34,.7); color: var(--ice); border-color: var(--line); }}
+div.stButton > button {{ width: 100%; border: 1px solid var(--mint); border-radius: 3px; background: var(--mint); color: #071522; font-weight: 700; letter-spacing: .04em; padding: .75rem 1rem; transition: transform .2s ease, box-shadow .2s ease, background .2s ease; }}
+div.stButton > button:hover {{ transform: translateY(-3px); background: #80ebcc; box-shadow: 0 10px 24px rgba(70,215,176,.25); color: #071522; }}
+div[data-testid="stMetric"] {{ background: rgba(23,58,82,.64); border: 1px solid var(--line); border-left: 3px solid var(--mint); padding: 1rem; transition: transform .2s ease; }}
+div[data-testid="stMetric"]:hover {{ transform: translateY(-3px); }}
+div[data-testid="stMetricValue"] {{ color: var(--ice); font-family: 'Barlow Condensed', sans-serif; }}
+@media (max-width: 700px) {{ .block-container {{ padding: 2rem 1rem 3rem; }} .hero {{ padding: 1.25rem; }} }}
 </style>
 """), unsafe_allow_html=True)
 
 st.markdown(dedent("""
-
-<!-- ========================================================
-     GUÍA RÁPIDA DE HTML
-     div   = caja o contenedor.
-     h1    = título principal.
-     h2/h3 = subtítulos.
-     p     = párrafo.
-     span  = permite aplicar estilo solo a una parte del texto.
-     class = conecta un elemento HTML con una regla CSS.
-     ======================================================== -->
-<div class="hero">
-    <h1>Oil & Gas Production Dashboard</h1>
-    <p>
-        Aplicación educativa para analizar
-        <span class="accent">producción</span>,
-        <span class="accent">Water Cut</span>
-        e
-        <span class="accent">ingreso bruto mensual estimado</span>
-        de un pozo.
-    </p>
-</div>
+<section class="hero">
+    <div class="eyebrow">Operations intelligence / Production monitoring</div>
+    <h1>Centro de control<br>de producción</h1>
+    <p>Lectura ejecutiva de desempeño para un pozo productor. Ajuste los parámetros y obtenga una estimación operacional inmediata.</p>
+</section>
 """), unsafe_allow_html=True)
 
-# columns divide la interfaz en dos zonas: parámetros e interacción.
-left, right = st.columns([1.05, 0.95], gap="large")
+left, right = st.columns([1, 1.08], gap="large")
 
-# Todo lo indentado aquí aparece en la columna izquierda.
 with left:
-    st.subheader("1. Parámetros operacionales")
+    st.markdown('<div class="section-label">01 / Parámetros operacionales</div>', unsafe_allow_html=True)
+    st.markdown('<div class="panel">', unsafe_allow_html=True)
     oil_bopd = st.slider("Producción de petróleo [BOPD]", 100, 5000, 1200, 50)
     water_bwpd = st.slider("Producción de agua [BWPD]", 0, 5000, 600, 50)
     oil_price = st.number_input("Precio estimado [USD/bbl]", 1.0, 200.0, 75.0, 1.0)
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('<div style="height: 1rem"></div>', unsafe_allow_html=True)
+    calcular = st.button("CALCULAR INDICADORES", type="primary")
 
-    st.markdown(dedent(f"""
-    <div class="oil-card">
-        <h3>Parámetros activos</h3>
-        <p>Petróleo: <span class="value">{oil_bopd:,} BOPD</span></p>
-        <p>Agua: <span class="value">{water_bwpd:,} BWPD</span></p>
-        <p>Precio: <span class="value">${oil_price:.2f}/bbl</span></p>
-        <p><small>Esta tarjeta reacciona con hover por CSS.</small></p>
-    </div>
-    """), unsafe_allow_html=True)
-
-    # El botón devuelve True cuando se presiona y permite ejecutar los cálculos.
-    calcular = st.button("Calcular indicadores", type="primary")
-
-# Todo lo indentado aquí aparece en la columna derecha.
 with right:
-    st.subheader("2. Interacción JavaScript")
+    st.markdown('<div class="section-label">02 / Estado del activo</div>', unsafe_allow_html=True)
     components.html("""
     <style>
-    html,body{margin:0;padding:10px;background:transparent;font-family:Arial,sans-serif;}
-    .shell{
-        position:relative; padding:4px; border-radius:36px; overflow:hidden;
-        clip-path: inset(0 round 36px); background:#12304A; box-shadow:0 18px 46px rgba(4,18,29,.30);
-    }
-    .shell::before{
-        content:""; position:absolute; width:180%; height:180%; left:-40%; top:-40%;
-        background: conic-gradient(from 0deg, transparent 0deg 220deg, #20E6C7 275deg, #F7FBFF 320deg, transparent 360deg);
-        opacity:0; transition:opacity .22s ease;
-    }
-    .shell.active::before{opacity:1; animation:spin 1.5s linear infinite;}
-    .card{
-        --x:50%; --y:50%; position:relative; z-index:1; min-height:255px;
-        border-radius:32px; overflow:hidden; clip-path: inset(0 round 32px); padding:30px;
-        background: radial-gradient(circle at var(--x) var(--y), rgba(32,230,199,.28), rgba(27,71,107,0) 36%), #1B476B;
-        color:#F7FBFF;
-    }
-    .card h2{margin-top:0;color:#20E6C7;}
-    .card strong{color:#20E6C7;}
-    .status{margin-top:20px;padding-top:14px;border-top:1px solid rgba(32,230,199,.40);}
-    @keyframes spin{to{transform:rotate(360deg);}}
+    html, body { margin:0; background:transparent; font-family:'DM Sans', sans-serif; }
+    .asset { --x:50%; --y:50%; min-height:350px; padding:28px; position:relative; overflow:hidden; border:1px solid rgba(70,215,176,.4); border-top:3px solid #46D7B0; background: radial-gradient(circle at var(--x) var(--y), rgba(70,215,176,.18), transparent 35%), #173A52; color:#EAF3F5; transition: border-color .25s ease, box-shadow .25s ease; }
+    .asset:hover { border-color:#46D7B0; box-shadow:0 16px 36px rgba(0,0,0,.28); }
+    .asset h2 { margin:0 0 2.4rem; color:#46D7B0; font:700 2rem 'Barlow Condensed', sans-serif; letter-spacing:.04em; }
+    .asset p { margin:.7rem 0; color:#A9BFCA; } .asset strong { color:#EAF3F5; }
+    .asset .status { position:absolute; bottom:28px; left:28px; right:28px; padding-top:14px; border-top:1px solid rgba(234,243,245,.15); font-size:.8rem; letter-spacing:.06em; text-transform:uppercase; }
+    .dot { display:inline-block; width:8px; height:8px; margin-right:8px; background:#46D7B0; border-radius:50%; box-shadow:0 0 12px #46D7B0; }
     </style>
-
-    <div id="shell" class="shell">
-        <div id="card" class="card">
-            <h2>Pozo A-17</h2>
-            <p>Producción: <strong>1,250 BOPD</strong></p>
-            <p>Water Cut: <strong>31.4%</strong></p>
-            <p>El borde neón y el halo responden al movimiento del cursor.</p>
-            <p id="status" class="status">Estado: cursor fuera</p>
-        </div>
+    <div id="asset" class="asset">
+        <h2>POZO A-17 / ONLINE</h2>
+        <p>Clase de activo: <strong>Productor convencional</strong></p>
+        <p>Última lectura: <strong>hace 04 min</strong></p>
+        <p>Disponibilidad del sistema: <strong>99.2%</strong></p>
+        <div id="status" class="status"><span class="dot"></span>Monitoreo activo</div>
     </div>
-
     <script>
-    // Buscamos los tres elementos HTML que JavaScript necesita controlar.
-    const shell = document.getElementById("shell");   // contenedor del borde neón
-    const card = document.getElementById("card");     // tarjeta interior
-    const status = document.getElementById("status"); // texto de estado
-
-    // mouseenter = el cursor entra al contenedor.
-    shell.addEventListener("mouseenter", () => {
-        // Agregamos active: CSS detecta esta clase y enciende el giro neón.
-        shell.classList.add("active");
-        // Cambiamos el mensaje que ve el usuario.
-        status.textContent = "Estado: interacción activa";
+    const asset = document.getElementById('asset');
+    const status = document.getElementById('status');
+    asset.addEventListener('mouseenter', () => { status.lastChild.textContent = '  Interacción activa'; });
+    asset.addEventListener('mouseleave', () => {
+        status.lastChild.textContent = '  Monitoreo activo';
+        asset.style.setProperty('--x', '50%'); asset.style.setProperty('--y', '50%');
     });
-
-    // mouseleave = el cursor sale del contenedor.
-    shell.addEventListener("mouseleave", () => {
-        // Quitamos active: la animación se detiene.
-        shell.classList.remove("active");
-        // Restauramos el mensaje.
-        status.textContent = "Estado: cursor fuera";
-        // Centramos nuevamente el halo.
-        card.style.setProperty("--x", "50%");
-        card.style.setProperty("--y", "50%");
-    });
-
-    // mousemove = el cursor se mueve dentro de la tarjeta.
-    card.addEventListener("mousemove", (event) => {
-        // Obtiene posición y dimensiones de la tarjeta.
-        const rect = card.getBoundingClientRect();
-        // Calculamos X e Y del cursor como porcentaje.
-        const x = ((event.clientX - rect.left) / rect.width) * 100;
-        const y = ((event.clientY - rect.top) / rect.height) * 100;
-        // Enviamos X/Y a las variables CSS --x y --y.
-        card.style.setProperty("--x", x + "%");
-        card.style.setProperty("--y", y + "%");
-        // El radial-gradient usa esas variables y por eso la luz sigue al cursor.
+    asset.addEventListener('mousemove', (event) => {
+        const box = asset.getBoundingClientRect();
+        asset.style.setProperty('--x', `${((event.clientX - box.left) / box.width) * 100}%`);
+        asset.style.setProperty('--y', `${((event.clientY - box.top) / box.height) * 100}%`);
     });
     </script>
-    """, height=355)
+    """, height=385)
 
-# Este bloque solo se ejecuta después de presionar el botón.
 if calcular:
-    # Fluido total = petróleo + agua.
     total_fluid = oil_bopd + water_bwpd
-    # Water Cut = porcentaje de agua dentro del fluido total.
     water_cut = water_bwpd / total_fluid * 100 if total_fluid else 0
-    # Estimamos petróleo mensual usando 30 días.
     monthly_oil = oil_bopd * 30
-    # Ingreso bruto = barriles mensuales x precio.
     gross_revenue = monthly_oil * oil_price
 
-    st.subheader("3. Resultado operacional")
-    # Cuatro columnas para mostrar los KPI.
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Petróleo", f"{oil_bopd:,.0f} BOPD")
-    c2.metric("Fluido total", f"{total_fluid:,.0f} BFPD")
-    c3.metric("Water Cut", f"{water_cut:.1f}%")
-    c4.metric("Ingreso mensual", f"${gross_revenue:,.0f}")
-
+    st.markdown('<div class="section-label">03 / Indicadores de desempeño</div>', unsafe_allow_html=True)
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Fluido total", f"{total_fluid:,.0f} BFPD")
+    c2.metric("Water Cut", f"{water_cut:.1f}%")
+    c3.metric("Ingreso mensual", f"${gross_revenue:,.0f}")
     st.markdown(dedent(f"""
-    <div class="oil-card">
-        <h3>Lectura rápida</h3>
-        <p>El pozo produce <span class="value">{oil_bopd:,.0f} BOPD</span> de petróleo.</p>
-        <p>El Water Cut estimado es <span class="value">{water_cut:.1f}%</span>.</p>
-        <p>Con un precio de <span class="value">${oil_price:.2f}/bbl</span>, el ingreso bruto mensual estimado es <span class="value">${gross_revenue:,.0f}</span>.</p>
-    </div>
+    <div class="result-card"><strong>Resumen ejecutivo</strong><p>La operación registra <strong>{oil_bopd:,.0f} BOPD</strong> y un Water Cut de <strong>{water_cut:.1f}%</strong>. El ingreso bruto mensual estimado alcanza <strong>${gross_revenue:,.0f}</strong>.</p></div>
     """), unsafe_allow_html=True)
 
-st.caption("Ejemplo educativo: no incluye regalías, impuestos, OPEX, transporte ni descuentos comerciales.")
+st.caption("Modelo educativo: no incluye regalías, impuestos, OPEX, transporte ni descuentos comerciales.")
+
 
 
